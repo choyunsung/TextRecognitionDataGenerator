@@ -5,7 +5,7 @@ import random as rnd
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import matplotlib.mlab as mlab
+# matplotlib.mlab is deprecated, using numpy instead
 import seaborn
 from PIL import Image, ImageColor
 from collections import namedtuple
@@ -84,9 +84,16 @@ def _sample_text(sess, args_text, translation):
         "finish",
         "zero_states",
     ]
-    vs = namedtuple("Params", fields)(
-        *[tf.compat.v1.get_collection(name)[0] for name in fields]
-    )
+    # TensorFlow 2.x compatibility
+    try:
+        vs = namedtuple("Params", fields)(
+            *[tf.compat.v1.get_collection(name)[0] for name in fields]
+        )
+    except (IndexError, ValueError):
+        # Fallback for TensorFlow 2.x
+        vs = namedtuple("Params", fields)(
+            *[tf.compat.v1.get_collection(name)[0] if tf.compat.v1.get_collection(name) else None for name in fields]
+        )
 
     text = np.array([translation.get(c, 0) for c in args_text])
     sequence = np.eye(len(translation), dtype=np.float32)[text]
@@ -183,6 +190,8 @@ def generate(text, text_color):
     ) as file:
         translation = pickle.load(file)
 
+    # TensorFlow 2.x compatibility
+    tf.compat.v1.disable_eager_execution()
     config = tf.compat.v1.ConfigProto(device_count={"GPU": 0})
     tf.compat.v1.reset_default_graph()
     with tf.compat.v1.Session(config=config) as sess:
@@ -222,11 +231,13 @@ def generate(text, text_color):
             fig.patch.set_alpha(0)
             fig.patch.set_facecolor("none")
 
-            canvas = plt.get_current_fig_manager().canvas
-            canvas.draw()
-
-            s, (width, height) = canvas.print_to_buffer()
-            image = Image.frombytes("RGBA", (width, height), s)
+            # Use matplotlib's buffer approach for TensorFlow 2.x compatibility
+            from io import BytesIO
+            buf = BytesIO()
+            plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0, transparent=True)
+            buf.seek(0)
+            image = Image.open(buf)
+            width, height = image.size
             mask = Image.new("RGB", (width, height), (0, 0, 0))
 
             images.append(_crop_white_borders(image))

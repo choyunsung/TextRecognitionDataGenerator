@@ -1,0 +1,24 @@
+# Updated requirements for TextRecognitionDataGenerator
+# Compatible with Python 3.8+ and latest library versions
+
+# Core dependencies
+Pillow>=10.0.0
+requests>=2.31.0
+opencv-python>=4.8.0.0
+tqdm>=4.66.0
+wikipedia>=1.4.0
+
+# Text processing
+arabic-reshaper>=3.0.0
+python-bidi>=0.4.2
+
+# Image processing
+diffimg>=0.2.3
+
+# Optional: For handwritten text generation
+# Uncomment the following lines if you need handwritten text generation
+# tensorflow>=2.13.0
+# matplotlib>=3.7.0
+# seaborn>=0.12.0
+# numpy>=1.24.0
+# beautifulsoup4>=4.12.0
